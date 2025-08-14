@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Video Playback</title>
+        <script src="https://cdn.jsdelivr.net/npm/@mux/mux-player@2.4.0/dist/mux-player.min.js"></script>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+            }
+            mux-player {
+                width: 640px;
+                height: 360px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Video Preview</h1>
+        <mux-player
+            stream-type="on-demand"
+            playback-id="enq8YQfdGH2R6p2MzJ84YAZDtXLN8RDtTRy19bxcpkw"
+            metadata-video-title="Test Video"
+            metadata-viewer-user-id="test-user"
+        ></mux-player>
+
+        <script>
+            const playbackId = 'enq8YQfdGH2R6p2MzJ84YAZDtXLN8RDtTRy19bxcpkw';
+            const player = document.querySelector('mux-player');
+            player.setAttribute('playback-id', playbackId);
+        </script>
+    </body>
+</html>
