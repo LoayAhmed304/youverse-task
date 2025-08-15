@@ -7,21 +7,19 @@ from app.db import models, db
 from app import schemas
 
 
-def check_video_permission(course_id: int, request: Request, db: Session) -> bool:
-
-    current_user = get_current_user(request)
+def check_video_permission(course_id: int, user_id: int, db: Session) -> bool:
 
     owner_id = db.query(models.Course.owner_id).filter(models.Course.id == course_id).first()
     if not owner_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
 
-    if owner_id[0] != current_user["user_id"]:
+    if owner_id[0] != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to create video for this course")
 
     return True
 
 
-def validate_all_videos(request: Request, all_files: list[UploadFile], videos_metadata: list, db: Session, current_user: dict) -> None:
+def validate_all_videos(all_files: list[UploadFile], videos_metadata: list, db: Session, user_id: int) -> None:
     for i, video_data in enumerate(videos_metadata):
 
         video_request = schemas.VideoRequest(**video_data)
@@ -38,11 +36,14 @@ def validate_all_videos(request: Request, all_files: list[UploadFile], videos_me
         if video_exist:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video already exists")
 
-        check_video_permission(video_request.course_id, request, db)
+        check_video_permission(video_request.course_id, user_id, db)
 
 
 def is_user_in_course(course_id: int, user_id: int, db: Session) -> bool:
     exists = db.query(models.user_courses).filter(and_(models.user_courses.c.user_id == user_id,
                                                        models.user_courses.c.course_id == course_id)).first()
+
+    if not exists:
+        exists = db.query(models.Course).filter(models.Course.id == course_id, models.Course.owner_id == user_id).first()
 
     return exists is not None

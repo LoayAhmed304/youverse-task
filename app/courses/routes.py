@@ -21,7 +21,7 @@ def get_courses(db: Session = Depends(db.get_db)):
 
 
 @router.post("/")
-def create_course(course: schemas.CourseRequest, request: Request, db: Session = Depends(db.get_db), current_user: dict = Depends(get_current_user)):
+def create_course(course: schemas.CourseRequest, db: Session = Depends(db.get_db), current_user: dict = Depends(get_current_user)):
 
     new_course: schemas.CourseCreate = schemas.CourseCreate(**course.model_dump(), owner_id=current_user["user_id"])
 
@@ -52,8 +52,7 @@ def delete_course(course_id: int, db: Session = Depends(db.get_db), current_user
 
 
 @router.post("/videos")
-def upload_video(request: Request,
-                 title: str = Form(...),
+def upload_video(title: str = Form(...),
                  description: str = Form(...),
                  duration: float = Form(...),
                  category: str = Form(...),
@@ -66,24 +65,29 @@ def upload_video(request: Request,
     if not file.filename.endswith(('.mp4', '.mkv', '.avi')):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid video format")
 
+    can_create = check_video_permission(course_id, current_user["user_id"], db)
+    if not can_create:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to create video for this course")
+
     video_exist = db.query(models.Video).filter(models.Video.title == title, models.Video.course_id == course_id).first()
     if video_exist:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video already exists")
 
-    can_create = check_video_permission(course_id, request, db)
-
-    if not can_create:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to create video for this course")
-
+    video_request = schemas.VideoRequest(
+        title=title,
+        description=description,
+        duration=duration,
+        category=category,
+        subcategory=subcategory,
+        course_id=course_id,
+    )
     asset_id = mux.upload_to_mux(file)
 
-    new_video = schemas.VideoCreate(title=title,
-                                    description=description,
-                                    duration=duration,
-                                    category=category,
-                                    subcategory=subcategory,
-                                    course_id=course_id,
-                                    asset_id=asset_id)
+    new_video = None
+    if asset_id:
+        new_video = schemas.VideoCreate(**video_request.model_dump(), asset_id=asset_id)
+    else:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to upload video to the service provider")
 
     video = models.Video(**new_video.model_dump())
     db.add(video)
@@ -93,19 +97,18 @@ def upload_video(request: Request,
     return {"status": "success", "data": video}
 
 
-"""Upload a batch of videos
-This takes a json object containing array of each video's metadata. "[ {}, {} ]"
-Note that the list must match the order of the uploaded files.
-Currently, it works by sending it as a text on Postman.
-"""
-
-
 @router.post("/videos/batch")
 def batch_upload_videos(request: Request,
                         all_data: str = Form(...),
                         all_files: list[UploadFile] = File(...),
                         db: Session = Depends(db.get_db),
                         current_user: dict = Depends(get_current_user)):
+    """Upload a batch of videos
+    This takes a json object containing array of each video's metadata. "[ {}, {} ]"
+    Note that the list must match the order of the uploaded files.
+    Currently, it works by sending it as a text on Postman.
+    """
+
     # load all videos meta data into an array
     videos_metadata = []
     try:
@@ -113,13 +116,13 @@ def batch_upload_videos(request: Request,
     except json.JSONDecodeError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON format")
 
-    validate_all_videos(request, all_files, videos_metadata, db, current_user)
+    validate_all_videos(all_files, videos_metadata, db, current_user["user_id"])
 
     # now all videos are validated and their meta data, now we upload them all.
     videos_result = []
     for i, file in enumerate(all_files):
         file_metadata = videos_metadata[i]
-        video_data = upload_video(request=request, **file_metadata, file=file, db=db, current_user=current_user).get("data")
+        video_data = upload_video(**file_metadata, file=file, db=db, current_user=current_user).get("data")
         video = {
             "title": video_data.title,
             "course_id": video_data.course_id,
@@ -135,12 +138,12 @@ def batch_upload_videos(request: Request,
 
 
 @router.delete("/videos/{asset_id}")
-def delete_video(request: Request, asset_id: str, current_user: dict = Depends(get_current_user), db: Session = Depends(db.get_db)):
+def delete_video(asset_id: str, current_user: dict = Depends(get_current_user), db: Session = Depends(db.get_db)):
     video = db.query(models.Video).filter(models.Video.asset_id == asset_id).first()
     if not video:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
 
-    can_delete = check_video_permission(video.course_id, request, db)
+    can_delete = check_video_permission(video.course_id, current_user["user_id"], db)
 
     if not can_delete:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete video for this course")
@@ -150,6 +153,7 @@ def delete_video(request: Request, asset_id: str, current_user: dict = Depends(g
         db.delete(video)
         db.commit()
     except Exception as e:
+        db.rollback()
         print(f"An error occurred: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete video from the service provider")
 
