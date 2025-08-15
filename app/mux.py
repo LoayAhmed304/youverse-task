@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import mux_python
 import requests
+from fastapi import UploadFile
 
 load_dotenv()
 
@@ -15,7 +16,7 @@ assets_api = mux_python.AssetsApi(mux_python.ApiClient(configuration))
 uploads_api = mux_python.DirectUploadsApi(mux_python.ApiClient(configuration))
 
 
-def upload_to_mux(file: str) -> str:
+def upload_to_mux(file: UploadFile) -> str:
     try:
         # policy should change to 'drm' when I have access to that
         playback_policies = [mux_python.PlaybackPolicy.PUBLIC]
@@ -27,18 +28,16 @@ def upload_to_mux(file: str) -> str:
         upload_url = upload_response.data.url
 
         # use the created url to upload the file
-        with open(file, 'rb') as f:
-            response = requests.put(upload_url, data=f)
-            if response.status_code != 200:
-                raise Exception(f"Upload failed: {response.text}")
+        response = requests.put(upload_url, data=file.file)
+        if response.status_code != 200:
+            raise Exception(f"Upload failed: {response.text}")
 
         upload_id = upload_response.data.id
         upload_status = uploads_api.get_direct_upload(upload_id)
 
         if upload_status.data.asset_id:
             return upload_status.data.asset_id
-        raise RuntimeError("Internal Server error while uploading. Response data: ",
-                           upload_status.data)
+        raise RuntimeError("Internal Server error while uploading. Response data: ", upload_status.data)
 
     except mux_python.ApiException as e:
         raise RuntimeError(f"API error: {e.body}")
@@ -51,15 +50,10 @@ def get_asset_details(asset_id: str) -> dict:
     try:
         asset = assets_api.get_asset(asset_id)
         if asset.data.status == 'ready':
-            playback_id = next((p.id for p in asset.data.playback_ids if p.policy == "public"),
-                               None)
+            playback_id = next((p.id for p in asset.data.playback_ids if p.policy == "public"), None)
             if not playback_id:
                 raise Exception("No playback ID found")
-            return {
-                "asset_id": asset.data.id,
-                "status": asset.data.status,
-                "playback_ids": [p.id for p in asset.data.playback_ids]
-            }
+            return {"asset_id": asset.data.id, "status": asset.data.status, "playback_ids": [p.id for p in asset.data.playback_ids]}
     except mux_python.ApiException as e:
         raise RuntimeError(f"API error: {e.body}")
     except Exception as e:

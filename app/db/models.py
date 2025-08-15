@@ -15,6 +15,7 @@ class Course(Base):
     name = Column(String, nullable=False)
     description = Column(Text)
     category = Column(String)
+    owner_id = Column(Integer, ForeignKey("user.id"))
 
     videos = relationship("Video", back_populates="course", cascade="all, delete-orphan")
     users = relationship("User", secondary=user_courses, back_populates="courses")
