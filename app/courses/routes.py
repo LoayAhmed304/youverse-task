@@ -6,7 +6,7 @@ from app.db import models, db
 from app import mux
 from app import schemas
 from app.auth.utils import get_current_user
-from .utils import check_video_creation_permission, validate_all_videos
+from .utils import check_video_permission, validate_all_videos
 
 router = APIRouter()
 
@@ -68,7 +68,7 @@ def upload_video(request: Request,
     if video_exist:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video already exists")
 
-    can_create = check_video_creation_permission(course_id, request, db)
+    can_create = check_video_permission(course_id, request, db)
 
     if not can_create:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to create video for this course")
@@ -130,3 +130,25 @@ def batch_upload_videos(request: Request,
         videos_result.append(video)
 
     return {"status": "success", "data": videos_result}
+
+
+@router.delete("/videos/{asset_id}")
+def delete_video(request: Request, asset_id: str, current_user: dict = Depends(get_current_user), db: Session = Depends(db.get_db)):
+    video = db.query(models.Video).filter(models.Video.asset_id == asset_id).first()
+    if not video:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
+
+    can_delete = check_video_permission(video.course_id, request, db)
+
+    if not can_delete:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete video for this course")
+
+    try:
+        mux.delete_asset(asset_id)
+        db.delete(video)
+        db.commit()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete video from the service provider")
+
+    return {"status": "success", "detail": "Video deleted successfully"}

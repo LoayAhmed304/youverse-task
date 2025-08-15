@@ -58,3 +58,13 @@ def get_asset_details(asset_id: str) -> dict:
         raise RuntimeError(f"API error: {e.body}")
     except Exception as e:
         print(f"An error occurred: {e}")
+
+
+def delete_asset(asset_id: str) -> None:
+    try:
+        assets_api.delete_asset(asset_id)
+    except mux_python.ApiException as e:
+        raise RuntimeError(f"API error: {e.body}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        raise RuntimeError(f"Delete error: {str(e)}")

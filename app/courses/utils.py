@@ -6,7 +6,7 @@ from app.db import models, db
 from app import schemas
 
 
-def check_video_creation_permission(course_id: int, request: Request, db: Session) -> bool:
+def check_video_permission(course_id: int, request: Request, db: Session) -> bool:
 
     current_user = get_current_user(request)
 
