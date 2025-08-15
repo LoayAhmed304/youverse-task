@@ -25,11 +25,14 @@ class CourseCreate(BaseModel):
     owner_id: int
 
 
-class VideoCreate(BaseModel):
+class VideoRequest(BaseModel):
     title: str
     description: str
     course_id: int
-    asset_id: str
     duration: float
     category: str
     subcategory: str
+
+
+class VideoCreate(VideoRequest):
+    asset_id: str

@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException, status, Request, Response
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -5,7 +6,7 @@ from app.db import models, db
 from app import mux
 from app import schemas
 from app.auth.utils import get_current_user
-from .utils import check_video_creation_permission
+from .utils import check_video_creation_permission, validate_all_videos
 
 router = APIRouter()
 
@@ -88,3 +89,44 @@ def upload_video(request: Request,
     db.refresh(video)
 
     return {"status": "success", "data": video}
+
+
+"""Upload a batch of videos
+This takes a json object containing array of each video's metadata. "[ {}, {} ]"
+Note that the list must match the order of the uploaded files.
+Currently, it works by sending it as a text on Postman.
+"""
+
+
+@router.post("/videos/batch")
+def batch_upload_videos(request: Request,
+                        all_data: str = Form(...),
+                        all_files: list[UploadFile] = File(...),
+                        db: Session = Depends(db.get_db),
+                        current_user: dict = Depends(get_current_user)):
+    # load all videos meta data into an array
+    videos_metadata = []
+    try:
+        videos_metadata = json.loads(all_data)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON format")
+
+    validate_all_videos(request, all_files, videos_metadata, db, current_user)
+
+    # now all videos are validated and their meta data, now we upload them all.
+    videos_result = []
+    for i, file in enumerate(all_files):
+        file_metadata = videos_metadata[i]
+        video_data = upload_video(request=request, **file_metadata, file=file, db=db, current_user=current_user).get("data")
+        video = {
+            "title": video_data.title,
+            "course_id": video_data.course_id,
+            "duration": video_data.duration,
+            "category": video_data.category,
+            "subcategory": video_data.subcategory,
+            "description": video_data.description,
+            "asset_id": video_data.asset_id
+        }
+        videos_result.append(video)
+
+    return {"status": "success", "data": videos_result}
