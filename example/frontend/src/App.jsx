@@ -36,7 +36,9 @@ function App() {
         password,
       });
       setLoginResult('Login successful!');
-      toast.success(`Logged in as: ${response.data.data.user_id}`);
+      toast.success(
+        `Logged in successfully with user ID: ${response.data.data.user_id}`
+      );
       setCurUser(response.data.data.user_id);
     } catch (err) {
       console.error(err);
@@ -46,12 +48,18 @@ function App() {
 
   const handleSignup = async (email, password) => {
     try {
-      const response = await axios.post('http://localhost:8000/auth/signup', {
-        username: Math.random().toString(36).substring(7),
-        email,
-        password,
-      });
-      setCurUser(response.data.user_id);
+      const response = await axiosInstance.post(
+        'http://localhost:8000/auth/signup',
+        {
+          username: Math.random().toString(36).substring(7),
+          email,
+          password,
+        }
+      );
+      setCurUser(response.data.data.user_id);
+      toast.success(
+        'Signed up successfully! With user ID: ' + response.data.data.user_id
+      );
     } catch (err) {
       console.error(err);
       setLoginResult('Signup failed');
