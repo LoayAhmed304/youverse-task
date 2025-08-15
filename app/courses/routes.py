@@ -156,6 +156,20 @@ def delete_video(request: Request, asset_id: str, current_user: dict = Depends(g
     return {"status": "success", "detail": "Video deleted successfully"}
 
 
+@router.get("/videos/{asset_id}")
+def get_video_playback(asset_id: str, current_user: dict = Depends(get_current_user), db: Session = Depends(db.get_db)):
+    video = db.query(models.Video).filter(models.Video.asset_id == asset_id).first()
+    if not video:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
+
+    can_access = is_user_in_course(video.course_id, current_user["user_id"], db)
+    if not can_access:
+        return {"status": "fail", "message": "User is not enrolled in this course"}
+
+    video_details = mux.get_asset_details(asset_id)
+    return {"status": "success", "data": {"video_data": jsonable_encoder(video), "video_details": video_details}}
+
+
 @router.get("/{course_id}")
 def get_course_videos(course_id: str, current_user: dict = Depends(get_current_user), db: Session = Depends(db.get_db)):
     course = db.query(models.Course).filter(models.Course.id == course_id).first()
