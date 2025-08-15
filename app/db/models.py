@@ -3,8 +3,7 @@ from app.db.db import Base
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float, Table
 from sqlalchemy.orm import relationship
 
-user_courses = Table("user_courses", Base.metadata,
-                     Column("user_id", Integer, ForeignKey("user.id"), primary_key=True),
+user_courses = Table("user_courses", Base.metadata, Column("user_id", Integer, ForeignKey("user.id"), primary_key=True),
                      Column("course_id", Integer, ForeignKey("course.id"), primary_key=True))
 
 

@@ -1,6 +1,7 @@
 from app.auth.utils import get_current_user
 from fastapi import HTTPException, Request, status, UploadFile
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 
 from app.db import models, db
 from app import schemas
@@ -37,4 +38,11 @@ def validate_all_videos(request: Request, all_files: list[UploadFile], videos_me
         if video_exist:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video already exists")
 
-        check_video_creation_permission(video_request.course_id, request, db)
+        check_video_permission(video_request.course_id, request, db)
+
+
+def is_user_in_course(course_id: int, user_id: int, db: Session) -> bool:
+    exists = db.query(models.user_courses).filter(and_(models.user_courses.c.user_id == user_id,
+                                                       models.user_courses.c.course_id == course_id)).first()
+
+    return exists is not None

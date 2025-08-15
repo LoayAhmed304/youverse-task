@@ -1,12 +1,14 @@
 import json
 from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException, status, Request, Response
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy import insert
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.db import models, db
 from app import mux
 from app import schemas
 from app.auth.utils import get_current_user
-from .utils import check_video_permission, validate_all_videos
+from .utils import check_video_permission, is_user_in_course, validate_all_videos
 
 router = APIRouter()
 
@@ -152,3 +154,34 @@ def delete_video(request: Request, asset_id: str, current_user: dict = Depends(g
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete video from the service provider")
 
     return {"status": "success", "detail": "Video deleted successfully"}
+
+
+@router.get("/{course_id}")
+def get_course_videos(course_id: str, current_user: dict = Depends(get_current_user), db: Session = Depends(db.get_db)):
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+
+    can_access = is_user_in_course(course.id, current_user["user_id"], db)
+    if not can_access:
+        return {"status": "fail", "message": "User is not enrolled in this course"}
+
+    videos = course.videos
+
+    return {"status": "success", "length": len(videos), "data": jsonable_encoder(videos)}
+
+
+@router.post("/join/{course_id}")
+def join_course(course_id: str, current_user: dict = Depends(get_current_user), db: Session = Depends(db.get_db)):
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, status="fail", detail="Course not found")
+
+    if is_user_in_course(course.id, current_user["user_id"], db):
+        return {"status": "fail", "message": "User is already enrolled in this course"}
+
+    stmt = insert(models.user_courses).values(user_id=current_user["user_id"], course_id=course.id)
+    db.execute(stmt)
+    db.commit()
+
+    return {"status": "success", "message": "User enrolled in course successfully"}
