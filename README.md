@@ -7,7 +7,8 @@ Note that I allowed the CORS origin to be usable by anyone, so you can test rout
 Visit [this link](https://documenter.getpostman.com/view/37899717/2sB3BHkoUi) for full documentation.
 
 ## Small Demo Testing Some API Endpoints
-Main advantage of this is the video playback preview.
+Main advantage of this is the video playback preview. Note that the free plan is limited to 10 video assets, it currently is empty so there's a space to try the service.
+
 Visit [https://youverse.loay.work](https://youverse.loay.work)
 
 #### Video:
@@ -24,6 +25,17 @@ Note that currently DRM isn't enabled, since it requires a wait queue/list to ge
 Other websites don't have DRM even as a free-trial that worked with my own credit card. So I did this using the same streaming service but without using the DRM-enabled option.
 However when I get the beta release (probabbly after couple days), it'll be very easy to just generate DRM tokens and pass/receive along the requests.
 
+
+
+## How to run it yourself
+I would recommends just opening up Postman, and use the base URL as https://youverse.loay.work/api, and append to it all the routes provided in the API documentation.
+
+But still, if you want to fire it up yourself, follow these steps:
+
+1. Have docker installed.
+2. Create a .env file for the streaming service API token and user access token.
+3. Run docker compose up --build -d
+4. Use Postman for the routes
 
 
 
