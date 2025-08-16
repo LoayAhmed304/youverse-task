@@ -1,4 +1,4 @@
-# Backend Videos Streaming Service
+# Backend Courses Service
 This is a backend service made as a task for Youverse Learning.
 
 ## API Documentation:
@@ -16,6 +16,7 @@ Please read the API documentation, it has everything I assumed and requests/resp
 Note that currently DRM isn't enabled, since it requires a wait queue/list to get the DRM beta version.
 Other websites don't have DRM even as a free-trial that worked with my own credit card. So I did this using the same streaming service but without using the DRM-enabled option.
 However when I get the beta release (probabbly after couple days), it'll be very easy to just generate DRM tokens and pass/receive along the requests.
+
 
 
 
