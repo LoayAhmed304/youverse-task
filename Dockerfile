@@ -11,10 +11,9 @@ COPY requirements.txt ./
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python -m app.db.init_tables
-RUN python -m app.db.db
 
 COPY . .
+
 
 EXPOSE 8000
 

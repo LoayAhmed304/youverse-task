@@ -49,7 +49,7 @@ function App() {
   const handleSignup = async (email, password) => {
     try {
       const response = await axiosInstance.post(
-        'http://localhost:8000/auth/signup',
+        '/auth/signup',
         {
           username: Math.random().toString(36).substring(7),
           email,
@@ -121,6 +121,7 @@ function App() {
     <>
       <div className="text-center">
         <h1 className="text-3xl font-bold text-blue-600 mb-4">API Test Page</h1>
+        <h3 className="text-center">Please note that not all routes are implemented here. Check Postman documentation for the routes list</h3>
         {curUser && <h1>Current user ID: {curUser}</h1>}
       </div>
       <div className="min-h-screen bg-gray-100 p-8 grid grid-cols-3 gap-8">
