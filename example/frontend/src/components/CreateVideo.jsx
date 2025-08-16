@@ -1,5 +1,19 @@
 import React, { useState } from 'react';
 
+function getMediaDuration(file) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      resolve(video.duration);
+    };
+    video.onerror = (e) => {
+      reject(new Error('Error loading video metadata: ' + e.message));
+    };
+    video.src = URL.createObjectURL(file);
+  });
+}
+
 const CreateVideo = ({ handleCreateVideo }) => {
   const [uploading, setUploading] = useState(false);
   const [videoData, setVideoData] = useState({
@@ -12,10 +26,12 @@ const CreateVideo = ({ handleCreateVideo }) => {
     file: null,
   });
 
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     const { name, value, type, files } = e.target;
     if (type === 'file') {
-      setVideoData({ ...videoData, [name]: files[0] });
+      const duration = await getMediaDuration(files[0]);
+      console.log('Video duration:', duration);
+      setVideoData({ ...videoData, duration: duration, [name]: files[0] });
     } else {
       setVideoData({ ...videoData, [name]: value });
     }
@@ -58,14 +74,6 @@ const CreateVideo = ({ handleCreateVideo }) => {
             name="file"
             accept="video/mp4"
             className="border rounded px-3 py-2 flex-1"
-            onChange={handleChange}
-          />
-          <input
-            type="text"
-            name="duration"
-            placeholder="Duration in seconds (e.g. 120)"
-            className="border rounded px-3 py-2 flex-1"
-            value={videoData.duration}
             onChange={handleChange}
           />
           <input
