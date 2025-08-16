@@ -1,6 +1,6 @@
 from app.db.db import Base
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float, Table
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float, Table, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 user_courses = Table("user_courses", Base.metadata, Column("user_id", Integer, ForeignKey("user.id"), primary_key=True),
@@ -11,7 +11,7 @@ class Course(Base):
     __tablename__ = "course"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, unique=True)
     description = Column(Text)
     category = Column(String)
     owner_id = Column(Integer, ForeignKey("user.id"))

@@ -62,7 +62,7 @@ def upload_video(title: str = Form(...),
                  db: Session = Depends(db.get_db),
                  current_user: dict = Depends(get_current_user)):
 
-    if not file.filename.endswith(('.mp4', '.mkv', '.avi')):
+    if not file.filename.endswith(('.mp4')):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid video format")
 
     can_create = check_video_permission(course_id, current_user["user_id"], db)
