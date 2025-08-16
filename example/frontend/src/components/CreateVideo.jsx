@@ -42,6 +42,7 @@ const CreateVideo = ({ handleCreateVideo }) => {
       <div className="bg-white rounded shadow p-6 w-full max-w-md h-full items-center justify-center flex flex-col gap-4">
         <h2 className="text-xl font-semibold mb-2">Create Video</h2>
         <h4 className="text-gray-600">(Duration is set automatically)</h4>
+        <p className="text-gray-600 mb-4 text-center">Make sure the video is .mp4. Currently the only supported extension by the streaming service free plan</p>
         <p className="text-gray-400 mb-4 text-center">
           Fill in the details below to create a new video linked to a course
         </p>

@@ -42,6 +42,7 @@ function App() {
       setCurUser(response.data.data.user_id);
     } catch (err) {
       console.error(err);
+      toast.error(err?.response?.data?.detail || 'Login failed');
       setLoginResult('Login failed');
     }
   };
@@ -62,6 +63,7 @@ function App() {
       );
     } catch (err) {
       console.error(err);
+      toast.error(err?.response?.data?.detail || 'Signup failed');
       setLoginResult('Signup failed');
     }
   };
@@ -76,7 +78,7 @@ function App() {
       }
     } catch (err) {
       console.error(err);
-      toast.error('Failed to fetch course details');
+      toast.error(err?.response?.data?.detail || 'Failed to fetch course details');
       setCourseDetails(null);
     }
     setItemId('');
@@ -88,7 +90,7 @@ function App() {
       const response = await axiosInstance.post('/courses', courseData);
       console.log('Course created:', response.data);
       toast.success(
-        'Course created successfully! with ID: ' + response.data.data.id
+        'Course created successfully! with ID: ' + response.data.data.id + "\n Please copy the course ID to fetch the course/videos"
       );
     } catch (err) {
       console.error(err);
