@@ -13,14 +13,14 @@ from .utils import check_video_permission, is_user_in_course, validate_all_video
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("")
 def get_courses(db: Session = Depends(db.get_db)):
     courses = db.query(models.Course).all()
 
     return {"status": "success", "data": courses}
 
 
-@router.post("/")
+@router.post("")
 def create_course(course: schemas.CourseRequest, db: Session = Depends(db.get_db), current_user: dict = Depends(get_current_user)):
 
     new_course: schemas.CourseCreate = schemas.CourseCreate(**course.model_dump(), owner_id=current_user["user_id"])
