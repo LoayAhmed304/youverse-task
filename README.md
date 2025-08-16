@@ -10,12 +10,20 @@ Visit [this link](https://documenter.getpostman.com/view/37899717/2sB3BHkoUi) fo
 Main advantage of this is the video playback preview.
 Visit [https://youverse.loay.work](https://youverse.loay.work)
 
+#### Video:
+
+
+https://github.com/user-attachments/assets/f990ebfc-f808-441a-9720-628f24d4a21c
+
+
+
 ## NOTE
 Please read the API documentation, it has everything I assumed and requests/responses examples.
 
 Note that currently DRM isn't enabled, since it requires a wait queue/list to get the DRM beta version.
 Other websites don't have DRM even as a free-trial that worked with my own credit card. So I did this using the same streaming service but without using the DRM-enabled option.
 However when I get the beta release (probabbly after couple days), it'll be very easy to just generate DRM tokens and pass/receive along the requests.
+
 
 
 
