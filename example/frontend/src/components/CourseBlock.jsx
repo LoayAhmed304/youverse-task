@@ -5,7 +5,13 @@ const CourseBlock = ({ handleGetCourse, itemDetails }) => {
 
   return (
     <div className="bg-white h-full items-center justify-center rounded shadow p-6 w-full max-w-md flex flex-col gap-4">
-      <h2 className="text-xl font-semibold mb-2">Get Course by ID</h2>
+      <h2 className="text-xl font-semibold">Get Course details by ID</h2>
+      <h4 className="text-gray-600">
+        You must be enrolled to that course or the owner of it
+      </h4>
+      <p className="text-gray-400 mb-4 text-center">
+        Returns the videos details for that course (not the playback stream)
+      </p>
       <form
         className="flex gap-2 items-center"
         onSubmit={(e) => e.preventDefault()}
@@ -18,7 +24,7 @@ const CourseBlock = ({ handleGetCourse, itemDetails }) => {
           onChange={(e) => setItemId(e.target.value)}
         />
         <button
-          className="bg-purple-500 text-white px-4 py-2 rounded"
+          className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 cursor-pointer transition-colors"
           type="button"
           onClick={(e) => handleGetCourse(e, itemId)}
         >

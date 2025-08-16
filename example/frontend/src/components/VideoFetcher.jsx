@@ -50,7 +50,14 @@ const VideoFetcher = () => {
   return (
     <div>
       <div className="bg-white h-full items-center justify-center rounded shadow p-6 w-200 flex flex-col gap-4">
-        <h1>Video Preview</h1>
+        <h1 className="font-semibold text-xl">Video Preview</h1>
+        <h4 className="text-gray-600">
+          Displays the asset (video) playback streaming link from the streaming
+          service
+        </h4>
+        <p className="text-gray-400 mb-2">
+          Also must be enrolled or the owner of the course
+        </p>
 
         <textarea
           rows={3}
@@ -61,7 +68,7 @@ const VideoFetcher = () => {
         />
 
         <button
-          className="bg-purple-500 text-white px-4 py-2 rounded"
+          className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 cursor-pointer transition-colors"
           type="button"
           onClick={handleFetchVideo}
         >
